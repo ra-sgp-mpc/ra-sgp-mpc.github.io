@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>RA-SGP-MPC</title>
+<meta name="description" content="Risk-aware speed adaptation for path tracking of agricultural robots under localisation and model uncertainty.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23363636'/%3E%3Cpath d='M5 9h18a4 4 0 0 1 0 8H9a4 4 0 0 0 0 8h18' stroke='%23e0533f' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+<header class="hero">
+  <h1 class="title"><span class="name">RA-SGP-MPC</span>: Risk-aware speed adaptation for path tracking of agricultural robots under localisation and model uncertainty</h1>
+  <p class="venue">Manuscript under review</p>
+  <nav class="buttons">
+    <a class="btn" href="#video"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg>Video</a>
+    <a class="btn" href="#method"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Method</a>
+    <a class="btn" href="#results"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Results</a>
+  </nav>
+</header>
+
+<section class="block" id="video">
+  <div class="media">
+    <video controls preload="metadata" poster="static/images/poster_main.jpg" playsinline>
+      <source src="static/videos/ra_sgp_mpc_video.mp4" type="video/mp4">
+    </video>
+  </div>
+</section>
+
+<section class="block gray">
+  <div class="text">
+    <h2>Abstract</h2>
+    <p>Path-tracking accuracy determines the quality of agricultural field operations, and travel speed the field capacity. Since a higher speed means a larger error, robots usually drive at a fixed speed chosen for the most difficult sections of a route, such as headland turns and stretches of degraded localisation, and are slower than necessary elsewhere. In most agricultural controllers, model uncertainty at most makes the steering more cautious, and localisation uncertainty stays in the estimator. This paper presents risk-aware sparse-GP model predictive control (RA-SGP-MPC), which uses both uncertainties to set the travel speed. A sparse Gaussian process (GP) vehicle model and an extended Kalman filter predict the lateral error and its uncertainty, and the robot drives at the fastest speed whose predicted error stays within an 8&nbsp;cm error budget with 95% probability. The steering is solved as a convex quadratic programme, and the controller runs in real time on an embedded computer. At two field sites, on serpentine and spiral routes with and without injected localisation noise, RA-SGP-MPC was compared with four fixed-speed controllers, including a GP-based MPC. With RTK localisation, it completed the routes in 11.1&ndash;14.8% less time than all baselines, with the lowest root-mean-square lateral error (RMSE). Under localisation noise, it slowed down in the noise sections, reduced the RMSE by 20&ndash;33% relative to the best baseline and still finished first. Its 95th-percentile error stayed within the budget in every run. Both uncertainties can decide where a field robot drives fast, raising field capacity without losing accuracy.</p>
+  </div>
+  <div class="stats">
+    <div><b>11.1&ndash;14.8%</b><span>less time than all fixed-speed baselines with RTK localisation</span></div>
+    <div><b>20&ndash;33%</b><span>lower RMSE than the best baseline under localisation noise</span></div>
+    <div><b>&lt;&nbsp;8&nbsp;cm</b><span>95th-percentile lateral error in every run</span></div>
+    <div><b>48.8&nbsp;ms</b><span>99th-percentile computation time per step, within the 0.1-s period</span></div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="text">
+    <h2>Fixed speed and risk-aware speed</h2>
+    <p>The lateral error at a given speed is not the same along a route. It grows in headland turns, where slip and the lag of the drive make the vehicle model least accurate, and where obstructions degrade the satellite localisation. A fixed speed must therefore be chosen for the most difficult section and is slower than necessary everywhere else. RA-SGP-MPC predicts the lateral error and its uncertainty on the path ahead and slows down only where the predicted error approaches the tolerance.</p>
+  </div>
+  <figure class="wide">
+    <a href="static/images/fig_teaser.jpg" target="_blank"><img src="static/images/fig_teaser.jpg" alt="Speed selection from the expected tracking error" loading="lazy"></a>
+    <figcaption><b>Figure 1.</b> Speed selection from the expected tracking error. (a) Along a field route, the lateral error that the robot can be expected to make grows in headland turns, where the vehicle model is less accurate, and in sections with degraded localisation, whereas the tolerance of the operation stays the same. (b) At a high constant speed, the expected error exceeds the tolerance in these sections and remains well inside it elsewhere. (c) A fixed speed must therefore be set for the hardest section. If the speed is chosen from the expected error, the robot slows down only in these sections and saves time on the rest of the route.</figcaption>
+  </figure>
+</section>
+
+<section class="block gray" id="method">
+  <div class="text">
+    <h2>Method</h2>
+    <p>Four components run once per control period of 0.1&nbsp;s. An extended Kalman filter (EKF) fuses the reported pose with its covariance, which is calibrated against a stationary recording. A sparse GP learns the residual of a feedback-linearised nominal model that includes the identified actuator response. A risk-aware speed layer predicts the lateral error and its uncertainty for a set of candidate speeds, and a convex steering MPC tracks the path at the selected speed.</p>
+  </div>
+  <figure class="wide">
+    <a href="static/images/fig_method.jpg" target="_blank"><img src="static/images/fig_method.jpg" alt="Structure of RA-SGP-MPC" loading="lazy"></a>
+    <figcaption><b>Figure 2.</b> Structure of RA-SGP-MPC. The four components run once per control period and share the nominal model. For the selected candidate, the speed layer shows the total predicted error band and its localisation part. The calibration factors, the actuator response and the GP posterior are obtained offline.</figcaption>
+  </figure>
+  <div class="row one">
+    <div class="clip">
+      <video class="loop" muted loop playsinline preload="none" poster="static/images/poster_s4.jpg"><source src="static/videos/s4.mp4" type="video/mp4"></video>
+      <h3>Speed selection</h3>
+      <p>For each candidate speed between 1.0 and 1.5&nbsp;m/s, the error is predicted over the next 4&nbsp;s. The robot keeps the fastest candidate whose 95% band stays within the budget, and the band grows with both the model and the localisation uncertainty.</p>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="setup">
+  <div class="text">
+    <h2>Field experiments</h2>
+    <p>The test platform is a skid-steer field robot with a dual-antenna RTK-GNSS/INS receiver that reports the pose with its covariance. All controllers ran at 10&nbsp;Hz on an NVIDIA Jetson AGX Orin with the same command limits. The experiments were carried out in a harvested wheat field (site 1) and a tilled field (site 2). At each site, the robot drove a serpentine route of six 45&nbsp;m passes joined by headland turns and an inward spiral, with RTK localisation and with localisation noise injected in marked sections, together with its covariance.</p>
+  </div>
+  <figure class="wide">
+    <a href="static/images/fig_platform.jpg" target="_blank"><img src="static/images/fig_platform.jpg" alt="Test platform" loading="lazy"></a>
+    <figcaption><b>Figure 3.</b> Test platform. (a, b) The robot with its sensors and onboard computer. (c) The RTK base station at the field edge. (d) Hardware and software architecture; the controller block contains the components of Figure 2.</figcaption>
+  </figure>
+  <figure class="wide">
+    <a href="static/images/fig_sites.jpg" target="_blank"><img src="static/images/fig_sites.jpg" alt="Test sites" loading="lazy"></a>
+    <a href="static/images/fig_route_sketch.jpg" target="_blank"><img src="static/images/fig_route_sketch.jpg" alt="Routes" loading="lazy" style="margin-top:10px"></a>
+    <figcaption><b>Figure 4.</b> Test sites and routes. (a, c) Orthophotos of site 1 (wheat stubble) and site 2 (tilled soil) with the serpentine route. (b, d) The robot on the two surfaces. (e) Serpentine, (f) spiral and (g) figure-eight training route, used at both sites. (h, i) Serpentine and spiral with localisation noise; the noise sections are shown in red. (j) Geometry and curvature of a headland turn.</figcaption>
+  </figure>
+  <div class="text">
+      <h3 class="sub">Compared controllers</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Method</th><th>Steering</th><th>Speed</th></tr></thead>
+        <tbody>
+          <tr><td>Pure pursuit</td><td>Look-ahead 0.7&nbsp;m</td><td>1.2&nbsp;m/s</td></tr>
+          <tr><td>Nominal MPC</td><td>Convex QP, nominal model</td><td>1.2&nbsp;m/s</td></tr>
+          <tr><td>DOB-MPC</td><td>As above, disturbance observer</td><td>1.2&nbsp;m/s</td></tr>
+          <tr><td>GP-MPC</td><td>As above, exact-GP mean</td><td>1.2&nbsp;m/s</td></tr>
+          <tr class="ours"><td><b>RA-SGP-MPC</b></td><td>As above, sparse-GP mean</td><td>Fastest candidate within the budget, 1.0&ndash;1.5&nbsp;m/s</td></tr>
+        </tbody>
+      </table></div>
+  </div>
+</section>
+
+<section class="block gray" id="results">
+  <div class="text">
+    <p class="kicker">Experiment 1</p>
+    <h2>Time and accuracy with RTK localisation</h2>
+    <p>RA-SGP-MPC drove fast where its predicted error was small and slowed down where it was large. On the serpentine, it drove the passes at about 1.5&nbsp;m/s and slowed to about 1.0&nbsp;m/s in the headland turns. On the spiral, its speed decreased gradually as the curvature increased towards the inner laps. It completed the serpentine 14.1&ndash;14.8% and the spiral 11.1&ndash;12.9% sooner than the baselines. In the headland turns, its RMSE was 2.78 and 4.38&nbsp;cm at the two sites, against 3.65&ndash;4.86 and 5.06&ndash;8.19&nbsp;cm for the baselines, and on the passes, which it drove about 0.3&nbsp;m/s faster, its RMSE was still the lowest.</p>
+  </div>
+  <div class="row three">
+    <div class="clip">
+      <video class="loop" muted loop playsinline preload="none" poster="static/images/poster_s8.jpg"><source src="static/videos/s8.mp4" type="video/mp4"></video>
+      <h3>Serpentine with RTK localisation</h3>
+      <p>Stabilised drone footage at both sites, with the speed of RA-SGP-MPC along the route.</p>
+    </div>
+    <div class="clip">
+      <video class="loop" muted loop playsinline preload="none" poster="static/images/poster_s9.jpg"><source src="static/videos/s9.mp4" type="video/mp4"></video>
+      <h3>Completion time on the serpentine</h3>
+      <p>All five controllers replayed from the logs.</p>
+    </div>
+    <div class="clip">
+      <video class="loop" muted loop playsinline preload="none" poster="static/images/poster_s11.jpg"><source src="static/videos/s11.mp4" type="video/mp4"></video>
+      <h3>Spiral with RTK localisation</h3>
+      <p>The speed decreased gradually as the curvature increased towards the inner laps.</p>
+    </div>
+  </div>
+  <div class="text">
+    <div class="tablewrap"><table class="num">
+      <caption>Results with RTK localisation, site 1 / site 2</caption>
+      <thead><tr><th>Method</th><th>Serpentine time (s)</th><th>Serpentine RMSE (cm)</th><th>Spiral time (s)</th><th>Spiral RMSE (cm)</th></tr></thead>
+      <tbody>
+        <tr><td>Pure pursuit</td><td>259.0 / 259.2</td><td>2.98 / 3.57</td><td>132.2 / 132.8</td><td>2.99 / 3.18</td></tr>
+        <tr><td>Nominal MPC</td><td>257.0 / 258.5</td><td>3.67 / 3.96</td><td>132.1 / 132.9</td><td>2.57 / 2.80</td></tr>
+        <tr><td>DOB-MPC</td><td>256.9 / 258.7</td><td>3.31 / 3.46</td><td>132.1 / 132.5</td><td>2.72 / 2.68</td></tr>
+        <tr><td>GP-MPC</td><td>258.4 / 259.0</td><td>2.92 / 3.36</td><td>132.0 / 132.6</td><td>2.50 / 2.55</td></tr>
+        <tr class="ours"><td>RA-SGP-MPC</td><td><b>220.7 / 220.9</b></td><td><b>2.66 / 2.97</b></td><td><b>115.2 / 117.8</b></td><td><b>2.20 / 2.24</b></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <figure class="wide">
+    <a href="static/images/fig_series_serpentine.jpg" target="_blank"><img src="static/images/fig_series_serpentine.jpg" alt="Serpentine route with RTK localisation" loading="lazy"></a>
+    <figcaption><b>Figure 5.</b> Serpentine route with RTK localisation. (a, b) Trajectory of RA-SGP-MPC at site 1 and site 2, coloured by its speed. (c, d) Trajectories of all controllers in a headland turn and (e, f) on a straight pass, with the lateral deviation magnified ten times and the &plusmn;8&nbsp;cm budget at the same scale (dotted). (g) Measured speed of all controllers (1-s moving average). (h, i) Running RMS of the lateral error over 4&nbsp;m of travel; the dotted line marks 8&nbsp;cm. (j) Computation time per control step. (k) Path curvature.</figcaption>
+  </figure>
+  <figure class="wide">
+    <a href="static/images/fig_series_spiral.jpg" target="_blank"><img src="static/images/fig_series_spiral.jpg" alt="Spiral route with RTK localisation" loading="lazy"></a>
+    <figcaption><b>Figure 6.</b> Spiral route with RTK localisation, shown as in Figure 5. (a, b) Trajectory of RA-SGP-MPC at the two sites, coloured by its speed. (c, d) Trajectories of all controllers on two adjacent laps. (e) Measured speed, (f, g) running RMS of the lateral error, (h) computation time per control step and (i) path curvature.</figcaption>
+  </figure>
+  <figure class="wide">
+    <a href="static/images/fig_stats_normal.jpg" target="_blank"><img src="static/images/fig_stats_normal.jpg" alt="Summary of the tests with RTK localisation" loading="lazy"></a>
+    <figcaption><b>Figure 7.</b> Summary of the tests with RTK localisation. (a) Completion time and (b) lateral RMSE on the two routes; bars show the mean of the two sites and markers the value at each site. (c) Median and (d) 95th percentile of the absolute lateral error; the dotted line in d marks the 8&nbsp;cm budget.</figcaption>
+  </figure>
+</section>
+
+<section class="block">
+  <div class="text">
+    <p class="kicker">Experiment 2</p>
+    <h2>Response to degraded localisation</h2>
+    <p>Noise was added to the pose in marked sections and reported together with its covariance, as when the RTK solution degrades near tree lines and buildings. RA-SGP-MPC slowed to about 1.0&nbsp;m/s in each noise section, even on straight passes where the route geometry alone did not require it, and drove the remaining segments at about 1.4&ndash;1.5&nbsp;m/s. Inside the noise sections of the serpentine, the RMSE of the MPC baselines rose to 4.04&ndash;5.75&nbsp;cm, whereas that of RA-SGP-MPC was 3.24 and 2.91&nbsp;cm. Over the whole route, its RMSE was 31.8 and 33.4% below that of the best baseline on the serpentine and 19.5 and 21.0% below on the spiral, and it still finished first.</p>
+  </div>
+  <div class="row two">
+    <div class="clip">
+      <video class="loop" muted loop playsinline preload="none" poster="static/images/poster_s13.jpg"><source src="static/videos/s13.mp4" type="video/mp4"></video>
+      <h3>Serpentine with localisation noise</h3>
+      <p>The robot slowed down in each noise section (red).</p>
+    </div>
+    <div class="clip">
+      <video class="loop" muted loop playsinline preload="none" poster="static/images/poster_s15b.jpg"><source src="static/videos/s15b.mp4" type="video/mp4"></video>
+      <h3>Spiral with localisation noise</h3>
+      <p>RA-SGP-MPC slowed down in each of the four noise sections of the outer laps.</p>
+    </div>
+  </div>
+  <div class="text">
+    <div class="tablewrap"><table class="num">
+      <caption>Results with localisation noise, site 1 / site 2. RMSE noise: inside the noise sections.</caption>
+      <thead><tr><th>Method</th><th>Serpentine time (s)</th><th>RMSE (cm)</th><th>RMSE noise (cm)</th><th>Spiral time (s)</th><th>RMSE (cm)</th><th>RMSE noise (cm)</th></tr></thead>
+      <tbody>
+        <tr><td>Pure pursuit</td><td>205.9 / 209.9</td><td>20.28 / 23.31</td><td>20.29 / 27.74</td><td>90.6 / 91.1</td><td>5.94 / 6.45</td><td>8.13 / 8.70</td></tr>
+        <tr><td>Nominal MPC</td><td>171.5 / 172.3</td><td>3.88 / 3.77</td><td>4.47 / 5.33</td><td>88.5 / 89.0</td><td>3.18 / 3.58</td><td>4.09 / 4.49</td></tr>
+        <tr><td>DOB-MPC</td><td>172.5 / 172.7</td><td>3.98 / 4.14</td><td>5.19 / 5.75</td><td>88.3 / 88.4</td><td>2.82 / 3.19</td><td>3.84 / 4.01</td></tr>
+        <tr><td>GP-MPC</td><td>171.3 / 172.4</td><td>3.68 / 3.53</td><td>4.04 / 4.72</td><td>88.4 / 88.9</td><td>2.89 / 3.14</td><td>3.22 / 4.15</td></tr>
+        <tr class="ours"><td>RA-SGP-MPC</td><td><b>161.6 / 167.4</b></td><td><b>2.51 / 2.35</b></td><td><b>3.24 / 2.91</b></td><td><b>82.9 / 83.8</b></td><td><b>2.27 / 2.48</b></td><td><b>2.47 / 2.67</b></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <figure class="wide">
+    <a href="static/images/fig_series_serpentine_noise.jpg" target="_blank"><img src="static/images/fig_series_serpentine_noise.jpg" alt="Serpentine route with localisation noise" loading="lazy"></a>
+    <figcaption><b>Figure 8.</b> Serpentine route with localisation noise, shown as in Figure 5. Red bands mark the noise sections in a and b, and shaded bands in g&ndash;k. (c, d) Trajectories of the MPC-based controllers in a turn and (e, f) on a straight pass inside noise sections.</figcaption>
+  </figure>
+  <figure class="wide">
+    <a href="static/images/fig_series_spiral_noise.jpg" target="_blank"><img src="static/images/fig_series_spiral_noise.jpg" alt="Spiral route with localisation noise" loading="lazy"></a>
+    <figcaption><b>Figure 9.</b> Spiral route with localisation noise, shown as in Figure 6. Red bands mark the noise sections in a and b, and shaded bands in e&ndash;i. (c, d) Trajectories of the MPC-based controllers on two adjacent laps with noise sections.</figcaption>
+  </figure>
+  <figure class="wide">
+    <a href="static/images/fig_stats_noise.jpg" target="_blank"><img src="static/images/fig_stats_noise.jpg" alt="Summary of the tests with localisation noise" loading="lazy"></a>
+    <figcaption><b>Figure 10.</b> Summary of the tests with localisation noise, shown as in Figure 7. (a) Completion time and (b) lateral RMSE on the two routes. (c) Median and (d) 95th percentile of the absolute lateral error inside the noise sections. Values of pure pursuit that exceed the axes are broken in b and marked by arrows in c and d.</figcaption>
+  </figure>
+</section>
+
+<section class="block gray">
+  <div class="text">
+    <h2>Error budget and computation time</h2>
+    <p>In every run of RA-SGP-MPC, with and without localisation noise, the 95th percentile of its error was below the 8&nbsp;cm budget, at most 5.9&nbsp;cm over a route and 6.2&nbsp;cm inside the noise sections, and its error exceeded the budget on at most 1.1% of a route. Its median computation time per control step was 24&ndash;41&nbsp;ms, most of it for the error predictions, and its 99th percentile was at most 48.8&nbsp;ms, within the control period of 0.1&nbsp;s.</p>
+  </div>
+  <div class="row one">
+    <div class="clip">
+      <video class="loop" muted loop playsinline preload="none" poster="static/images/poster_s17.jpg"><source src="static/videos/s17.mp4" type="video/mp4"></video>
+      <p>95th percentile of the error of RA-SGP-MPC in all runs, against the worst MPC baseline, and computation time per control step.</p>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="text">
+    <h2>Implications for field operations</h2>
+    <p>At equal working width and field efficiency, the shorter completion times correspond to a travel-time-based field capacity that is 12.5&ndash;17.4% higher with RTK localisation. Since the time is gained on the passes, the gain increases with the row length, to about 22% for 300&nbsp;m rows. The user specifies the tolerance of the operation instead of a travel speed, and a tighter tolerance makes the speed selection more restrictive without retuning the steering.</p>
+  </div>
+  <figure class="narrow">
+    <a href="static/images/fig_layout.jpg" target="_blank"><img src="static/images/fig_layout.jpg" alt="Field-capacity gain as a function of the row length" loading="lazy"></a>
+    <figcaption><b>Figure 11.</b> Travel-time-based field-capacity gain of RA-SGP-MPC over the mean of the fixed-speed baselines as a function of the row length, extrapolated from the cruise speed on the passes and the time per headland turn measured on the serpentine route. Red curves assume that a quarter of each pass has degraded localisation and compare with the mean of the MPC baselines. Markers show the gain measured on the test route.</figcaption>
+  </figure>
+</section>
+
+<section class="block gray">
+  <div class="text">
+    <h2>Conclusions</h2>
+    <p>The uncertainty of a learned vehicle model and of the localisation can be used to decide where an agricultural robot drives fast, rather than only how cautiously it steers. RA-SGP-MPC combines both uncertainties in a prediction of the lateral error and drives at the fastest speed whose predicted error stays within an error budget with 95% probability. Because the speed is chosen before the steering is optimised, the steering remains a convex QP, and the controller runs in real time on an embedded computer. In field experiments at two sites, the robot slowed down only where the predicted error approached the budget, in the headland turns and in the sections of degraded localisation, and gained time on the rest of the route without losing accuracy.</p>
+  </div>
+</section>
+
+<footer>
+  <p>This page accompanies a manuscript under review.</p>
+</footer>
+
+<script>
+// play each looping clip only while it is on screen
+(function () {
+  var clips = document.querySelectorAll('video.loop');
+  if (!('IntersectionObserver' in window)) { clips.forEach(function (v) { v.preload = 'auto'; v.autoplay = true; }); return; }
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) {
+      var v = e.target;
+      if (e.isIntersecting) { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+      else v.pause();
+    });
+  }, { threshold: 0.35 });
+  clips.forEach(function (v) { io.observe(v); });
+})();
+</script>
+</body>
+</html>
