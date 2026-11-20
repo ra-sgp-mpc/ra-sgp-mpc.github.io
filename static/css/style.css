@@ -26,6 +26,11 @@ a { color: var(--link); }
 .title { font-size: clamp(26px, 3.6vw, 40px); line-height: 1.25; font-weight: 600; max-width: 980px; margin: 0 auto 18px; }
 .title .name { white-space: nowrap; }
 .authors { color: var(--link); font-size: 19px; margin: 0; }
+.affil { color: var(--muted); font-size: 16px; margin: 2px 0 14px; }
+.logos { display: flex; justify-content: center; align-items: center; gap: 28px; margin: 0 0 14px; }
+.logos img { width: auto; }
+.logo-um { height: 48px; }
+.logo-lab { height: 34px; }
 .venue { color: var(--muted); margin: 4px 0 18px; }
 .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .btn {
